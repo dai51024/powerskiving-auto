@@ -10,6 +10,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Debug layout
+        run: |
+          ls -la
+          ls -la src || true
+          ls -la src/powerskiving || true
+          ls -la src/powerskiving/config_io.py || true
+          sed -n '1,40p' tools/speclint.py
       - name: Run tests
         run: |
           chmod +x ./test.sh
