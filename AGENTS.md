@@ -9,3 +9,8 @@
 - pytest/venv/make are not available.
 - Always run: ./test.sh
 - Include the output in the response.
+
+## Test command in this environment
+- pytest/venv/make are not available here.
+- Always run: ./test.sh
+- Include the command output in the response.
