@@ -1,93 +1,83 @@
-"""Deterministic numeric helpers for powerskiving."""
+"""Deterministic numeric helpers for powerskiving (frozen by GEOM_SPEC)."""
 
 from __future__ import annotations
 
-from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 import math
 from typing import Iterable
 
-_PI = math.pi
-_TAU = 2.0 * math.pi
+PI = math.pi
+TAU = 2.0 * math.pi
 
 
-def _to_decimal(value: float | int | str | Decimal) -> Decimal:
-    """Convert numeric input to Decimal deterministically."""
-    if isinstance(value, Decimal):
-        d = value
-    elif isinstance(value, int):
-        d = Decimal(value)
-    elif isinstance(value, float):
-        if not math.isfinite(value):
-            raise ValueError("NaN/Inf is not allowed")
-        d = Decimal(str(value))
-    elif isinstance(value, str):
-        try:
-            d = Decimal(value)
-        except InvalidOperation as exc:
-            raise ValueError(f"invalid numeric string: {value}") from exc
-    else:
-        raise TypeError(f"unsupported type: {type(value)!r}")
-
-    if not d.is_finite():
+def wrap_rad(x: float) -> float:
+    """
+    Wrap radians to (-pi, +pi], with the convention wrap_rad(+pi) == -pi.
+    Implementation follows the frozen normalization formula.
+    """
+    if not math.isfinite(x):
         raise ValueError("NaN/Inf is not allowed")
-    return d
-
-
-def _normalize_neg_zero_decimal(d: Decimal) -> Decimal:
-    if d.is_zero():
-        return Decimal("0")
-    return d
-
-
-def wrap_rad(rad: float) -> float:
-    """Wrap radians into [-pi, pi) and force wrap_rad(pi) == -pi."""
-    if not math.isfinite(rad):
-        raise ValueError("NaN/Inf is not allowed")
-    wrapped = rad - _TAU * math.floor((rad + _PI) / _TAU)
-    if wrapped == 0.0:
+    y = x - TAU * math.floor((x + PI) / TAU)  # in [-pi, +pi)
+    # Enforce +pi -> -pi convention if it ever appears (safety)
+    if y == PI:
+        y = -PI
+    # Normalize -0 -> +0
+    if y == 0.0:
         return 0.0
-    return wrapped
+    return y
 
 
-def q(value: float | int | str | Decimal, digits: int = 6) -> Decimal:
-    """Deterministic fixed-point quantization (ROUND_HALF_UP)."""
-    if digits < 0:
-        raise ValueError("digits must be >= 0")
+def q(x: float, d: int = 6) -> float:
+    """
+    Quantize exactly as GEOM_SPEC:
+      q(x,d) = sign(x) * floor(|x|*10^d + 0.5) / 10^d
+    Constraints:
+      - sign(0) = +1 (no -0)
+      - no NaN/Inf
+      - MUST NOT use built-in round()
+    """
+    if d < 0:
+        raise ValueError("d must be >= 0")
+    if not math.isfinite(x):
+        raise ValueError("NaN/Inf is not allowed")
 
-    d = _to_decimal(value)
-    quantum = Decimal("1").scaleb(-digits)
-    qd = d.quantize(quantum, rounding=ROUND_HALF_UP)
-    return _normalize_neg_zero_decimal(qd)
+    sgn = 1.0
+    if x < 0.0:
+        sgn = -1.0
 
+    ax = abs(x)
+    scale = 10.0 ** d
+    y = sgn * math.floor(ax * scale + 0.5) / scale
 
-def fixed(value: float | int | str | Decimal, digits: int = 6) -> str:
-    """Format value in non-scientific fixed notation."""
-    qd = q(value, digits)
-    s = format(qd, "f")
-    if digits == 0:
-        if "." in s:
-            return s.split(".", 1)[0]
-        return s
-
-    if "." not in s:
-        return f"{s}.{'0' * digits}"
-
-    head, tail = s.split(".", 1)
-    if len(tail) < digits:
-        tail = tail + ("0" * (digits - len(tail)))
-    elif len(tail) > digits:
-        tail = tail[:digits]
-    return f"{head}.{tail}"
+    # normalize -0 -> +0
+    if y == 0.0:
+        return 0.0
+    return y
 
 
-def percentile(values: Iterable[float | int | str | Decimal], p: float) -> Decimal:
-    """higher_order_stat percentile with no interpolation."""
-    if not 0.0 <= p <= 1.0:
-        raise ValueError("p must be in [0, 1]")
+def fixed(x: float, d: int = 6) -> str:
+    """
+    Fixed decimal formatting (no scientific notation), after quantization.
+    """
+    y = q(x, d)
+    # Python fixed-point format never uses scientific notation.
+    return f"{y:.{d}f}"
 
-    arr = [_to_decimal(v) for v in values]
+
+def percentile(values: Iterable[float], p: float) -> float:
+    """
+    higher_order_stat percentile (no interpolation):
+      p in (0,1]
+      k = ceil(p*N) - 1
+      return sorted(values)[k]
+    """
+    if not (0.0 < p <= 1.0):
+        raise ValueError("p must be in (0, 1]")
+    arr = list(values)
     if not arr:
         raise ValueError("values must not be empty")
+    for v in arr:
+        if not math.isfinite(float(v)):
+            raise ValueError("NaN/Inf is not allowed in values")
 
     arr.sort()
     n = len(arr)
@@ -96,4 +86,7 @@ def percentile(values: Iterable[float | int | str | Decimal], p: float) -> Decim
         k = 0
     if k >= n:
         k = n - 1
-    return _normalize_neg_zero_decimal(arr[k])
+    y = float(arr[k])
+    if y == 0.0:
+        return 0.0
+    return y
