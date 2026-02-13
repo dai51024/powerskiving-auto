@@ -8,4 +8,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: ./test.sh
+      - name: Run tests
+        run: |
+          chmod +x ./test.sh
+          ./test.sh
