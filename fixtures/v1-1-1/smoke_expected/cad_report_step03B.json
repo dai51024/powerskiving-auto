@@ -1,0 +1,28 @@
+{
+  "ctx": {
+    "boundary_loop_count_minus": 2,
+    "boundary_loop_count_plus": 1,
+    "golden_max_mm": 41.59119336131395528,
+    "golden_p95_mm": 41.59119336131395528,
+    "residual_abs_max": 0.00000000000106937,
+    "residual_abs_p95": 0.00000000000098765,
+    "s_rot_selected": -1,
+    "theta1_jump_count": 0,
+    "tri_count_flank_view_mesh_minus": 4,
+    "tri_count_flank_view_mesh_plus": 400,
+    "valid_ratio_minus": 0.00865800865800866,
+    "valid_ratio_plus": 1,
+    "valid_ratio_total": 0.50432900432900429
+  },
+  "exception_stacktrace": null,
+  "flank_view_mesh_minus_stl": "flank_view_mesh_minus.stl",
+  "flank_view_mesh_plus_stl": "flank_view_mesh_plus.stl",
+  "message": "step03B view mesh export completed",
+  "reason_code": "OK",
+  "status": "ok",
+  "step_id": "step03B_view_mesh",
+  "tri_count_minus": 4,
+  "tri_count_plus": 400,
+  "triangulation_mode_minus": "boundary_fan_uv",
+  "triangulation_mode_plus": "valid_cells"
+}

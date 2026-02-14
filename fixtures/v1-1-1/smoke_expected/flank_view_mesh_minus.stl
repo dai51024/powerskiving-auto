@@ -1,0 +1,30 @@
+solid flank_view_mesh_minus
+  facet normal 0.00000000 0.00000000 1.00000000
+    outer loop
+      vertex 56.287500 -5.000000 0.000000
+      vertex 56.500000 -5.500000 0.000000
+      vertex 56.712500 -5.000000 0.000000
+    endloop
+  endfacet
+  facet normal 0.00000000 0.00000000 1.00000000
+    outer loop
+      vertex 56.287500 -5.000000 0.000000
+      vertex 56.712500 -5.000000 0.000000
+      vertex 56.500000 -4.500000 0.000000
+    endloop
+  endfacet
+  facet normal 0.00000000 0.00000000 1.00000000
+    outer loop
+      vertex 57.137500 -5.000000 0.000000
+      vertex 57.350000 -5.500000 0.000000
+      vertex 57.562500 -5.000000 0.000000
+    endloop
+  endfacet
+  facet normal 0.00000000 0.00000000 1.00000000
+    outer loop
+      vertex 57.137500 -5.000000 0.000000
+      vertex 57.562500 -5.000000 0.000000
+      vertex 57.350000 -4.500000 0.000000
+    endloop
+  endfacet
+endsolid flank_view_mesh_minus

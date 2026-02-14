@@ -1,0 +1,40 @@
+{
+  "candidate_minus": {
+    "golden_dz_used_mm": 1.60000000000000009,
+    "golden_max_mm": 41.59119336131395528,
+    "golden_p95_mm": 41.59119336131395528,
+    "minus_eval_count": 3,
+    "plus_eval_count": 51,
+    "reason_code": "OK",
+    "s_rot": -1,
+    "status": "OK",
+    "z_mid_tool_mm": 0
+  },
+  "candidate_plus": {
+    "golden_dz_used_mm": 1.60000000000000009,
+    "golden_max_mm": null,
+    "golden_p95_mm": null,
+    "minus_eval_count": 0,
+    "plus_eval_count": 0,
+    "reason_code": "MIN_POINTS_FAIL",
+    "s_rot": 1,
+    "status": "REJECT",
+    "z_mid_tool_mm": 0
+  },
+  "ctx": {
+    "golden_max_mm": 41.59119336131395528,
+    "golden_p95_mm": 41.59119336131395528,
+    "s_rot_selected": -1
+  },
+  "exception_stacktrace": null,
+  "golden_dz_used_mm": 1.60000000000000009,
+  "golden_max_mm": 41.59119336131395528,
+  "golden_p95_mm": 41.59119336131395528,
+  "kernel_status": "OK",
+  "message": "step01 golden selection completed",
+  "reason_code": "OK",
+  "s_rot_selected": -1,
+  "status": "ok",
+  "step_id": "step01_golden",
+  "z_mid_tool_mm": 0
+}

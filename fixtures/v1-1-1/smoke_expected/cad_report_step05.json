@@ -1,0 +1,69 @@
+{
+  "ctx": {
+    "boundary_loop_count_minus": 2,
+    "boundary_loop_count_plus": 1,
+    "edge_minus_ok": false,
+    "edge_plus_ok": false,
+    "edges_ok": false,
+    "golden_max_mm": 41.59119336131395528,
+    "golden_p95_mm": 41.59119336131395528,
+    "residual_abs_max": 0.00000000000106937,
+    "residual_abs_p95": 0.00000000000098765,
+    "s_rot_selected": -1,
+    "selected_minus_length_mm": 0,
+    "selected_plus_length_mm": 0,
+    "theta1_jump_count": 0,
+    "tool_z_max": null,
+    "tool_z_min": null,
+    "tri_count_flank_view_mesh_minus": 4,
+    "tri_count_flank_view_mesh_plus": 400,
+    "valid_ratio_minus": 0.00865800865800866,
+    "valid_ratio_plus": 1,
+    "valid_ratio_total": 0.50432900432900429
+  },
+  "cutting_edge_points_csv": "cutting_edge_points.csv",
+  "edge_band": {
+    "band_width_cells": 1,
+    "invalid_cell_count": 0,
+    "minus_cell_count": 0,
+    "plus_cell_count": 0,
+    "skipped_reason": "EDGES_NOT_OK",
+    "status": "skipped"
+  },
+  "edge_band_cells_csv": null,
+  "edge_minus_ok": false,
+  "edge_plus_ok": false,
+  "edges_ok": false,
+  "exception_stacktrace": null,
+  "message": "step05 cutting edge extraction completed",
+  "n_rake": [
+    -0.08715574274765817,
+    0.99619469809174555,
+    0
+  ],
+  "od": null,
+  "rake_angle_deg": 5,
+  "rake_ref_point_T": [
+    20,
+    0,
+    0
+  ],
+  "reason_code": "EDGES_NOT_OK",
+  "selected_minus_length_mm": 0,
+  "selected_plus_length_mm": 0,
+  "selection_minus": {
+    "candidates": [],
+    "component_count": 0,
+    "selected_reason": "NO_IN_SECTOR_CANDIDATE"
+  },
+  "selection_plus": {
+    "candidates": [],
+    "component_count": 0,
+    "selected_reason": "NO_IN_SECTOR_CANDIDATE"
+  },
+  "status": "ok",
+  "step_id": "step05_cutting_edge",
+  "theta_ref_rad": 0,
+  "tool_z_max": null,
+  "tool_z_min": null
+}

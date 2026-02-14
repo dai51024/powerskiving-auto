@@ -1,0 +1,75 @@
+{
+  "boundary_minus_csv": "flank_uv_boundary_minus.csv",
+  "boundary_plus_csv": "flank_uv_boundary_plus.csv",
+  "boundary_wire_minus_step": "flank_boundary_wire_minus.step",
+  "boundary_wire_plus_step": "flank_boundary_wire_plus.step",
+  "boundary_wire_point_count_minus": 8,
+  "boundary_wire_point_count_plus": 64,
+  "ctx": {
+    "boundary_loop_count_minus": 2,
+    "boundary_loop_count_plus": 1,
+    "golden_max_mm": 41.59119336131395528,
+    "golden_p95_mm": 41.59119336131395528,
+    "residual_abs_max": 0.00000000000106937,
+    "residual_abs_p95": 0.00000000000098765,
+    "s_rot_selected": -1,
+    "theta1_jump_count": 0,
+    "valid_ratio_minus": 0.00865800865800866,
+    "valid_ratio_plus": 1,
+    "valid_ratio_total": 0.50432900432900429
+  },
+  "exception_stacktrace": null,
+  "loop_count_minus": 2,
+  "loop_count_plus": 1,
+  "message": "step03A boundary extraction completed",
+  "point_count_minus": 8,
+  "point_count_plus": 64,
+  "reason_code": "OK",
+  "self_intersection_pairs_minus": [],
+  "self_intersection_pairs_plus": [],
+  "status": "ok",
+  "step_id": "step03A_boundary",
+  "surface_uv_boundary_minus": [
+    {
+      "area_uv": 0.5,
+      "centroid": [
+        0,
+        0
+      ],
+      "flipped": 0,
+      "is_hole": 0,
+      "length_uv": 2.82842700000000002,
+      "loop_id": 0,
+      "parent": -1,
+      "self_intersection_ok": true
+    },
+    {
+      "area_uv": 0.5,
+      "centroid": [
+        2,
+        0
+      ],
+      "flipped": 0,
+      "is_hole": 0,
+      "length_uv": 2.82842700000000002,
+      "loop_id": 1,
+      "parent": -1,
+      "self_intersection_ok": true
+    }
+  ],
+  "surface_uv_boundary_plus": [
+    {
+      "area_uv": 230.5,
+      "centroid": [
+        10,
+        5
+      ],
+      "flipped": 1,
+      "is_hole": 0,
+      "length_uv": 62.8284269999999978,
+      "loop_id": 0,
+      "parent": -1,
+      "self_intersection_ok": true
+    }
+  ]
+}
