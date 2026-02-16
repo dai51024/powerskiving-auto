@@ -66,6 +66,40 @@ class TestStep01Golden(unittest.TestCase):
             self.assertNotIn("s_rot_selected", result.ctx)
             self.assertFalse((output_dir / "cad_report_step02.json").exists())
 
+    def test_step01_debug_uses_raw_for_golden_and_keeps_fitted_diagnostic(self):
+        smoke_path = Path("configs") / "smoke.json"
+        smoke_cfg = json.loads(smoke_path.read_text(encoding="utf-8"))
+
+        with tempfile.TemporaryDirectory() as td:
+            td_path = Path(td)
+            output_dir = td_path / "out"
+            smoke_cfg["output_dir"] = str(output_dir)
+            cfg_path = td_path / "smoke.json"
+            cfg_path.write_text(
+                json.dumps(smoke_cfg, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+                newline="\n",
+            )
+
+            result = run(cfg_path)
+            self.assertIsNotNone(result.step01_report_path)
+            assert result.step01_report_path is not None
+            report = json.loads(result.step01_report_path.read_text(encoding="utf-8"))
+            debug = report["debug"]
+            self.assertIn("ref_center_xy", debug)
+            self.assertIn("pts_center_xy", debug)
+            self.assertIn("delta_center_xy", debug)
+            self.assertIn("ref_frame", debug)
+            self.assertIn("pts_frame", debug)
+
+            raw_p95 = debug["raw_worst_p95_mm"]
+            fitted_p95 = debug["fitted_worst_p95_mm"]
+            self.assertIsNotNone(raw_p95)
+            self.assertIsNotNone(fitted_p95)
+            assert raw_p95 is not None
+            self.assertEqual(report["golden_p95_mm"], raw_p95)
+            self.assertEqual(debug["golden_p95_mm_source"], "raw")
+
 
 if __name__ == "__main__":
     unittest.main()

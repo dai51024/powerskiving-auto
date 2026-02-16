@@ -1,4 +1,5 @@
 import hashlib
+import importlib
 import json
 import math
 import unittest
@@ -18,6 +19,8 @@ from powerskiving.geom_kernel.tool_conjugate_grid_raw import (
     ToolConjugateGridRawResult,
 )
 from powerskiving.deterministic import wrap_rad
+
+golden_mod = importlib.import_module("powerskiving.geom_kernel.golden_select_s_rot")
 
 
 def _point(*, x: float, y: float, z: float, valid: int, reason_code: str) -> ToolConjugateGridRawPoint:
@@ -59,6 +62,69 @@ def _ref_pitch_points(*, module_mm: float, z1: int, pressure_angle_deg: float) -
     plus = _rz(delta, x0, y0)
     minus = _rz(-delta, x0, -y0)
     return plus, minus
+
+
+def _build_legacy_reference_polylines(
+    *,
+    module_mm: float,
+    z1: int,
+    pressure_angle_deg: float,
+    golden_pitch_band_dr_mm: float,
+    golden_ref_n: int,
+) -> tuple[tuple[tuple[float, float], ...], tuple[tuple[float, float], ...]] | None:
+    alpha = math.radians(pressure_angle_deg)
+    r_p = 0.5 * module_mm * float(z1)
+    r_b = r_p * math.cos(alpha)
+    if r_b <= 0.0:
+        return None
+    t_p = math.tan(alpha)
+    x_p = r_b * (math.cos(t_p) + t_p * math.sin(t_p))
+    y_p = r_b * (math.sin(t_p) - t_p * math.cos(t_p))
+    phi_p = wrap_rad(math.atan2(y_p, x_p))
+    theta_half = math.pi / (2.0 * float(z1))
+    delta = wrap_rad(theta_half - phi_p)
+
+    r_min = r_p - golden_pitch_band_dr_mm
+    r_max = r_p + golden_pitch_band_dr_mm
+    if r_max < r_min:
+        return None
+    if r_min < r_b:
+        r_min = r_b
+    t_min = math.sqrt(max((r_min / r_b) * (r_min / r_b) - 1.0, 0.0))
+    t_max = math.sqrt(max((r_max / r_b) * (r_max / r_b) - 1.0, 0.0))
+    if t_max < t_min:
+        return None
+
+    plus: list[tuple[float, float]] = []
+    minus: list[tuple[float, float]] = []
+    span = t_max - t_min
+    n_ref = float(golden_ref_n)
+    for j in range(golden_ref_n):
+        t_j = t_min + (float(j) + 0.5) * span / n_ref
+        x0 = r_b * (math.cos(t_j) + t_j * math.sin(t_j))
+        y0 = r_b * (math.sin(t_j) - t_j * math.cos(t_j))
+        plus.append(_rz(delta, x0, y0))
+        minus.append(_rz(-delta, x0, -y0))
+    return tuple(plus), tuple(minus)
+
+
+def _rotate_polyline(theta: float, polyline: tuple[tuple[float, float], ...]) -> tuple[tuple[float, float], ...]:
+    return tuple(_rz(theta, x, y) for x, y in polyline)
+
+
+def _median_dtheta(polyline: tuple[tuple[float, float], ...], theta_tooth_center_rad: float) -> float:
+    values = [wrap_rad(math.atan2(y, x) - theta_tooth_center_rad) for x, y in polyline]
+    values.sort()
+    return values[(len(values) - 1) // 2]
+
+
+def _mean_polyline_distance(
+    points: tuple[tuple[float, float], ...],
+    ref: tuple[tuple[float, float], ...],
+) -> float:
+    dists = [golden_mod._polyline_min_distance_2d(qx=x, qy=y, polyline=ref) for x, y in points]
+    assert all(d is not None for d in dists)
+    return sum(float(d) for d in dists) / float(len(dists))
 
 
 class TestGoldenSelectSRot(unittest.TestCase):
@@ -117,6 +183,10 @@ class TestGoldenSelectSRot(unittest.TestCase):
         self.assertIsNotNone(res.golden_max_mm)
         self.assertIsNotNone(res.z_mid_tool_mm)
         self.assertIsNotNone(res.golden_dz_used_mm)
+        self.assertIsNotNone(res.debug)
+        assert res.debug is not None
+        self.assertEqual(res.golden_p95_mm, res.debug["raw_worst_p95_mm"])
+        self.assertIn("fitted_worst_p95_mm", res.debug)
 
     def test_rejects_bracketing_failure(self):
         def raw_generator(**kwargs):
@@ -183,7 +253,7 @@ class TestGoldenSelectSRot(unittest.TestCase):
         payload = asdict(res1)
         blob = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
         got = hashlib.sha256(blob).hexdigest()
-        self.assertEqual(got, "6bc0004eca967a893893c14fc7e8cabe8ddb83d6c1776a6c3cf9bb900a0d4f8b")
+        self.assertEqual(got, "e34fd30ed5b58bd902d63c33ac66870da2e5ac2291c3442efa93c88958a802ec")
 
     def test_tie_keeps_first_candidate(self):
         def raw_generator(**kwargs):
@@ -213,6 +283,77 @@ class TestGoldenSelectSRot(unittest.TestCase):
         self.assertEqual(res.s_rot_selected, res.candidate_plus.s_rot)
         self.assertEqual(res.candidate_plus.golden_p95_mm, res.candidate_minus.golden_p95_mm)
         self.assertEqual(res.candidate_plus.golden_max_mm, res.candidate_minus.golden_max_mm)
+
+    def test_reference_labels_follow_dtheta_sign_when_theta_center_nonzero(self):
+        kwargs = self._base_kwargs()
+        for theta in (-2.356194490192345, 1.200000000000000, -1.700000000000000):
+            refs = golden_mod._build_reference_polylines(
+                module_mm=kwargs["module_mm"],
+                z1=kwargs["z1"],
+                pressure_angle_deg=kwargs["pressure_angle_deg"],
+                golden_pitch_band_dr_mm=kwargs["golden_pitch_band_dr_mm"],
+                golden_ref_n=kwargs["golden_ref_n"],
+                theta_tooth_center_rad=theta,
+            )
+            self.assertIsNotNone(refs)
+            assert refs is not None
+            ref_plus, ref_minus = refs
+            med_plus = _median_dtheta(ref_plus, theta)
+            med_minus = _median_dtheta(ref_minus, theta)
+            self.assertGreater(med_plus, 0.0)
+            self.assertLess(med_minus, 0.0)
+
+    def test_reference_relabel_changes_distance_order_to_same_side(self):
+        kwargs = self._base_kwargs()
+        theta = -2.356194490192345
+        legacy_refs = _build_legacy_reference_polylines(
+            module_mm=kwargs["module_mm"],
+            z1=kwargs["z1"],
+            pressure_angle_deg=kwargs["pressure_angle_deg"],
+            golden_pitch_band_dr_mm=kwargs["golden_pitch_band_dr_mm"],
+            golden_ref_n=80,
+        )
+        self.assertIsNotNone(legacy_refs)
+        assert legacy_refs is not None
+        legacy_plus, legacy_minus = legacy_refs
+
+        current_refs = golden_mod._build_reference_polylines(
+            module_mm=kwargs["module_mm"],
+            z1=kwargs["z1"],
+            pressure_angle_deg=kwargs["pressure_angle_deg"],
+            golden_pitch_band_dr_mm=kwargs["golden_pitch_band_dr_mm"],
+            golden_ref_n=80,
+            theta_tooth_center_rad=theta,
+        )
+        self.assertIsNotNone(current_refs)
+        assert current_refs is not None
+        ref_plus, ref_minus = current_refs
+
+        true_a = _rotate_polyline(theta, legacy_plus)
+        true_b = _rotate_polyline(theta, legacy_minus)
+        med_a = _median_dtheta(true_a, theta)
+        med_b = _median_dtheta(true_b, theta)
+        self.assertTrue((med_a > 0.0 and med_b < 0.0) or (med_a < 0.0 and med_b > 0.0))
+        if med_a > 0.0 and med_b < 0.0:
+            points_plus = true_a[::4]
+            points_minus = true_b[::4]
+        else:
+            points_plus = true_b[::4]
+            points_minus = true_a[::4]
+
+        legacy_pp = _mean_polyline_distance(points_plus, legacy_plus)
+        legacy_pm = _mean_polyline_distance(points_plus, legacy_minus)
+        legacy_mm = _mean_polyline_distance(points_minus, legacy_minus)
+        legacy_mp = _mean_polyline_distance(points_minus, legacy_plus)
+
+        new_pp = _mean_polyline_distance(points_plus, ref_plus)
+        new_pm = _mean_polyline_distance(points_plus, ref_minus)
+        new_mm = _mean_polyline_distance(points_minus, ref_minus)
+        new_mp = _mean_polyline_distance(points_minus, ref_plus)
+
+        self.assertLess(legacy_pm, legacy_pp)
+        self.assertLess(new_pp, new_pm)
+        self.assertLess(new_mm, new_mp)
 
 
 if __name__ == "__main__":

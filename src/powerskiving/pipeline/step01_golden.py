@@ -33,6 +33,9 @@ def _build_kwargs_from_config(cfg: dict[str, Any]) -> dict[str, Any]:
         "golden_min_points": int(cfg["golden_min_points"]),
         "golden_pitch_band_dr_mm": float(cfg["golden_pitch_band_dr_mm"]),
         "golden_ref_n": int(cfg["golden_ref_n"]),
+        "x_ref_mm": float(cfg["x_ref_mm"]),
+        "y_ref_mm": float(cfg["y_ref_mm"]),
+        "z_ref_mm": float(cfg["z_ref_mm"]),
     }
 
 
@@ -54,6 +57,20 @@ def run_step01(cfg: dict[str, Any], ctx: dict[str, Any]) -> Path:
         "kernel_status": None,
         "candidate_plus": None,
         "candidate_minus": None,
+        "debug": {
+            "ref_center_xy": None,
+            "pts_center_xy": None,
+            "delta_center_xy": None,
+            "ref_r_min_mm": None,
+            "ref_r_max_mm": None,
+            "pts_r_min_mm": None,
+            "pts_r_max_mm": None,
+            "ref_frame": None,
+            "pts_frame": None,
+            "raw_worst_p95_mm": None,
+            "fitted_worst_p95_mm": None,
+            "golden_p95_mm_source": None,
+        },
     }
 
     try:
@@ -70,6 +87,24 @@ def run_step01(cfg: dict[str, Any], ctx: dict[str, Any]) -> Path:
             "kernel_status": result.status,
             "candidate_plus": asdict(result.candidate_plus),
             "candidate_minus": asdict(result.candidate_minus),
+            "debug": {
+                "ref_center_xy": None if result.debug is None else result.debug.get("ref_center_xy"),
+                "pts_center_xy": None if result.debug is None else result.debug.get("pts_center_xy"),
+                "delta_center_xy": None if result.debug is None else result.debug.get("delta_center_xy"),
+                "ref_r_min_mm": None if result.debug is None else result.debug.get("ref_r_min_mm"),
+                "ref_r_max_mm": None if result.debug is None else result.debug.get("ref_r_max_mm"),
+                "pts_r_min_mm": None if result.debug is None else result.debug.get("pts_r_min_mm"),
+                "pts_r_max_mm": None if result.debug is None else result.debug.get("pts_r_max_mm"),
+                "ref_frame": None if result.debug is None else result.debug.get("ref_frame"),
+                "pts_frame": None if result.debug is None else result.debug.get("pts_frame"),
+                "raw_worst_p95_mm": None if result.debug is None else result.debug.get("raw_worst_p95_mm"),
+                "fitted_worst_p95_mm": None
+                if result.debug is None
+                else result.debug.get("fitted_worst_p95_mm"),
+                "golden_p95_mm_source": None
+                if result.debug is None
+                else result.debug.get("golden_p95_mm_source"),
+            },
         }
         if status == "ok":
             ctx["s_rot_selected"] = result.s_rot_selected
@@ -89,4 +124,3 @@ def run_step01(cfg: dict[str, Any], ctx: dict[str, Any]) -> Path:
     }
     write_json(report_path, cad_report)
     return report_path
-
